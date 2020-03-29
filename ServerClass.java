@@ -126,6 +126,13 @@ public class ServerClass {
 		}
 	}
 	
+	private static void deleteFile(String name){
+		int user_num = SearchUser(name);
+		File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
+		users.get(user_num).deletePhoto();
+		path.delete();
+	}
+	
 	private static File createPath(String name){
 		File path = new File("./Database/"+name);
 		path.mkdir();
@@ -244,6 +251,11 @@ public class ServerClass {
 						}
 						socket_out.close();
 					}
+					else if(work_type.equals("DELETE_PHOTO")){
+						final String name = in.readUTF();
+						deleteFile(name);
+						writeDatabase(name);
+					}
 				}
 				catch (UnknownHostException e){
 					e.printStackTrace();
@@ -260,10 +272,6 @@ public class ServerClass {
 		}
 		finally{
 			serverSocket.close();
-			/*writeDatabase();
-			for(int i=0; i<users.size(); i++){
-				writeDatabase(users.get(i).get_login());
-			}*/
 		}
 
 	}

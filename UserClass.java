@@ -52,7 +52,12 @@ public class UserClass {
 		}
 		else{
 			iterator = photoDates.listIterator(0);
-			return iterator.next();
+			if(photoDates.size()>0){
+				return iterator.next();
+			}
+			else{
+				return "null";
+			}
 		}
 	}
 	
@@ -62,7 +67,12 @@ public class UserClass {
 		}
 		else{
 			iterator = photoDates.listIterator(photoDates.size());
-			return iterator.previous();
+			if(photoDates.size()>0){
+				return iterator.previous();
+			}
+			else{
+				return "null";
+			}
 		}
 	}
 	
@@ -72,6 +82,10 @@ public class UserClass {
 	
 	public void restart_iterator(){
 		iterator = photoDates.listIterator(0);
+	}
+	
+	public void deletePhoto(){
+		iterator.remove();
 	}
 
 }
