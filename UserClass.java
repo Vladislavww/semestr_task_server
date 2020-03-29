@@ -1,28 +1,21 @@
 package bsu.rfe_g6k2.Yackou.server;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.Timer;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class UserClass {
 	private String login;
 	private String password;
 	private String ip;
 	private int port;
-	private boolean isOnline;
-	private Timer onlineActionTimer = new Timer(2000, new ActionListener(){
-		public void actionPerformed(ActionEvent ev){
-			set_online(false);
-		}
-	});
+	private LinkedList<String> photoDates = new LinkedList<String>();
+	private ListIterator<String> iterator = photoDates.listIterator();
 	
 	public UserClass(String new_login, String new_password){
 		login = new_login;
 		password = new_password;
 		ip = "";
 		port = 0;
-		isOnline = false;
 	}
 	
 	public void set_ip(String new_ip){
@@ -49,19 +42,36 @@ public class UserClass {
 		return port;
 	}
 	
-	public void set_online(boolean condition){
-		if(condition == true){
-			isOnline = true;
-			onlineActionTimer.start();
+	public void add_photoDate(String date){
+		iterator.add(date);
+	}
+
+	public String next_photoDate(){
+		if(iterator.hasNext()){
+			return iterator.next();
 		}
 		else{
-			isOnline = false;
-			onlineActionTimer.stop();
+			iterator = photoDates.listIterator(0);
+			return iterator.next();
 		}
 	}
 	
-	public boolean get_online(){
-		return isOnline;
+	public String previsious_photoDate(){
+		if(iterator.hasPrevious()){
+			return iterator.previous();
+		}
+		else{
+			iterator = photoDates.listIterator(photoDates.size());
+			return iterator.previous();
+		}
+	}
+	
+	public int get_size(){
+		return photoDates.size();
+	}
+	
+	public void restart_iterator(){
+		iterator = photoDates.listIterator(0);
 	}
 
 }

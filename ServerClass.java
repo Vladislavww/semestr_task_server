@@ -2,6 +2,10 @@ package bsu.rfe_g6k2.Yackou.server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,33 +13,55 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Date;
 import java.util.Scanner;
+
 
 public class ServerClass {
 	private static final int SERVER_PORT = 4512;
 	private static ArrayList<UserClass> users = new ArrayList<UserClass>(5);
 	private static String message;
 	
-	private static void writeDatabase() throws IOException{ //функция записи записи в файл
+	//функция записи записи в файл
+	private static void writeDatabase() throws IOException{ 
 		FileWriter output_logins = new FileWriter("Logins.txt");
 		FileWriter output_passwords = new FileWriter("Passwords.txt");
 		for(int i=0; i<users.size(); i++){
 			output_logins.write(users.get(i).get_login()+'\n');
-			output_passwords.write(users.get(i).get_password()+'\n');
+			output_passwords.write(users.get(i).get_password()+'\n'); 
 		}
 		output_logins.close();
 		output_passwords.close();
 	}
 	
+	private static void writeDatabase(String name) throws IOException{ 
+		FileWriter output_dates = new FileWriter(name+"_Inf.txt");
+		int user_num = SearchUser(name);
+		int size = users.get(user_num).get_size();
+		users.get(user_num).restart_iterator();
+		for(int i=0; i<size; i++){
+			output_dates.write(users.get(user_num).next_photoDate()+'\n');
+		}
+		output_dates.close();
+	}
 	private static void readDatabase() throws IOException{ //функция чтения файла
 		FileReader input_logins = new FileReader("Logins.txt");
 		FileReader input_passwords = new FileReader("Passwords.txt");
 		Scanner scan_logins = new Scanner(input_logins);
 		Scanner scan_passwords = new Scanner(input_passwords);
+		int i = 0;
 		while(scan_logins.hasNextLine()&&scan_passwords.hasNextLine()){
-			users.add(new UserClass(scan_logins.nextLine(), scan_passwords.nextLine()));
+			String name = scan_logins.nextLine();
+			users.add(new UserClass(name, scan_passwords.nextLine()));
+			FileReader input_dates = new FileReader(name+"_Inf.txt");
+			Scanner scan_dates = new Scanner(input_dates);
+			while(scan_dates.hasNextLine()){
+				users.get(i).add_photoDate(scan_dates.nextLine());
+			}
+			input_dates.close();
+			i += 1;
 		}
 		input_logins.close();
 		input_passwords.close();
@@ -50,6 +76,71 @@ public class ServerClass {
 		return -1;
 	}
 	
+	private static byte[] openFile(File selectedFile){
+		byte[] bytesFigure = null;
+		try { 
+			DataInputStream in = new DataInputStream(new FileInputStream(selectedFile));
+			bytesFigure = new byte[in.available()];
+			int bytesFigureSize = in.available();
+			int i=0;
+			while (in.available()>0){
+				bytesFigure[i] = in.readByte();
+				i += 1;
+			}
+			in.close(); 
+		} 
+		catch (FileNotFoundException ex){ 
+		} 
+		catch (IOException ex){ 
+		}
+		finally{
+			return bytesFigure;
+		}
+	}
+	
+	private static int openFile_size(File selectedFile){
+		int bytesFigureSize = 0;
+		try { 
+			DataInputStream in = new DataInputStream(new FileInputStream(selectedFile));
+			bytesFigureSize = in.available();
+			in.close(); 
+		} 
+		catch (FileNotFoundException ex){ 
+		} 
+		catch (IOException ex){ 
+		}
+		finally{
+			return bytesFigureSize;
+		}
+	}
+	
+	private static void saveFile(byte[] bytesFigure, int bytesFigureSize, File path){
+		try {  
+			DataOutputStream out = new DataOutputStream(new FileOutputStream(path));
+			for(int i=0; i<bytesFigureSize; i++){
+				out.writeByte(bytesFigure[i]);
+			}
+			out.close();
+		} 
+		catch (Exception e) {
+		}
+	}
+	
+	private static File createPath(String name){
+		File path = new File("./Database/"+name);
+		path.mkdir();
+		int user_num = SearchUser(name);
+		String photoName = createPhotoName();
+		path = new File("./Database/"+name+"/"+photoName+".png");
+		users.get(user_num).add_photoDate(photoName);
+		return path;
+	}
+	
+	private static String createPhotoName(){
+		Date date = new Date();
+		SimpleDateFormat name = new SimpleDateFormat("yyyyMMddHHmmss");
+		return name.format(date);
+	}
 	public static void main(String[] args) throws IOException {
 		readDatabase();
 		final ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
@@ -96,6 +187,7 @@ public class ServerClass {
 							users.add(new UserClass(login, password));
 							message = "created";
 							writeDatabase();
+							writeDatabase(login);
 						}
 						else{
 							message = "not_created";
@@ -108,14 +200,49 @@ public class ServerClass {
 					}
 					else if(work_type.equals("IMPORT_PHOTO")){
 						final String name = in.readUTF();
-						byte[] bytes = new byte[in.available()];
-						int bytesSize = in.available();
-						int i=0;
-						while (in.available()>0){
+						int bytesSize = in.readInt();
+						byte[] bytes = new byte[bytesSize];
+						System.out.println(bytesSize+"++");
+						System.out.println(in.available()+"++");
+						for(int i=0; i<bytesSize; i++){
 							bytes[i] = in.readByte();
-							i += 1;
+							System.out.println(bytes[i]+" "+i+" "+in.available());
 						}
-						
+						if(SearchUser(name)>=0){
+							File path = createPath(name);
+							saveFile(bytes, bytesSize, path);
+							writeDatabase(name);
+						}
+					}
+					else if(work_type.equals("NEXT_PHOTO")){
+						final String name = in.readUTF();
+						int user_num = SearchUser(name);
+						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
+						final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
+						File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
+						int bytesSize = openFile_size(path);
+						byte[] bytes = openFile(path);
+						out.writeUTF(work_type);
+						out.writeInt(bytesSize);
+						for(int i=0; i<bytesSize; i++){
+							out.writeByte(bytes[i]);
+						}
+						socket_out.close();
+					}
+					else if(work_type.equals("PREV_PHOTO")){
+						final String name = in.readUTF();
+						int user_num = SearchUser(name);
+						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
+						final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
+						File path = new File("./Database/"+name+"/"+users.get(user_num).previsious_photoDate()+".png");
+						int bytesSize = openFile_size(path);
+						byte[] bytes = openFile(path);
+						out.writeUTF(work_type);
+						out.writeInt(bytesSize);
+						for(int i=0; i<bytesSize; i++){
+							out.writeByte(bytes[i]);
+						}
+						socket_out.close();
 					}
 				}
 				catch (UnknownHostException e){
@@ -133,6 +260,10 @@ public class ServerClass {
 		}
 		finally{
 			serverSocket.close();
+			/*writeDatabase();
+			for(int i=0; i<users.size(); i++){
+				writeDatabase(users.get(i).get_login());
+			}*/
 		}
 
 	}
