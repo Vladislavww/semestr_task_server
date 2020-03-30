@@ -24,7 +24,7 @@ public class ServerClass {
 	private static ArrayList<UserClass> users = new ArrayList<UserClass>(5);
 	private static String message;
 	
-	//функция записи записи в файл
+	//функция записи записи в файл логинов и паролей
 	private static void writeDatabase() throws IOException{ 
 		FileWriter output_logins = new FileWriter("Logins.txt");
 		FileWriter output_passwords = new FileWriter("Passwords.txt");
@@ -36,6 +36,7 @@ public class ServerClass {
 		output_passwords.close();
 	}
 	
+	//функция записи записи в файл имен фотографий пользователя
 	private static void writeDatabase(String name) throws IOException{ 
 		FileWriter output_dates = new FileWriter(name+"_Inf.txt");
 		int user_num = SearchUser(name);
@@ -46,7 +47,9 @@ public class ServerClass {
 		}
 		output_dates.close();
 	}
-	private static void readDatabase() throws IOException{ //функция чтения файла
+	
+	//функция чтения файла
+	private static void readDatabase() throws IOException{ 
 		FileReader input_logins = new FileReader("Logins.txt");
 		FileReader input_passwords = new FileReader("Passwords.txt");
 		Scanner scan_logins = new Scanner(input_logins);
@@ -67,6 +70,7 @@ public class ServerClass {
 		input_passwords.close();
 	}
 	
+	//Функция поиска номера пользователя по его имени
 	private static int SearchUser(String name){
 		for(int i=0; i<users.size(); i++){
 			if(name.equals(users.get(i).get_login())){
@@ -76,6 +80,7 @@ public class ServerClass {
 		return -1;
 	}
 	
+	//Загрузка фотографии со своей БД
 	private static byte[] openFile(File selectedFile){
 		byte[] bytesFigure = null;
 		try { 
@@ -98,6 +103,7 @@ public class ServerClass {
 		}
 	}
 	
+	//Чтение размера фотографии 
 	private static int openFile_size(File selectedFile){
 		int bytesFigureSize = 0;
 		try { 
@@ -114,6 +120,7 @@ public class ServerClass {
 		}
 	}
 	
+	//Сохранение фотографии в свою БД
 	private static void saveFile(byte[] bytesFigure, int bytesFigureSize, File path){
 		try {  
 			DataOutputStream out = new DataOutputStream(new FileOutputStream(path));
@@ -126,6 +133,7 @@ public class ServerClass {
 		}
 	}
 	
+	//Удаление фотографии из БД
 	private static void deleteFile(String name){
 		int user_num = SearchUser(name);
 		File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
@@ -133,6 +141,7 @@ public class ServerClass {
 		path.delete();
 	}
 	
+	//Создание файла-пути
 	private static File createPath(String name){
 		File path = new File("./Database/"+name);
 		path.mkdir();
@@ -143,6 +152,7 @@ public class ServerClass {
 		return path;
 	}
 	
+	//Создание имени фотографии в зависимости от текущего времени
 	private static String createPhotoName(){
 		Date date = new Date();
 		SimpleDateFormat name = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -205,7 +215,7 @@ public class ServerClass {
 						out.writeUTF(message);
 						socket_out.close();
 					}
-					else if(work_type.equals("IMPORT_PHOTO")){
+					else if(work_type.equals("IMPORT_PHOTO")){//режим принятия и сохранения фотографии от клиента
 						final String name = in.readUTF();
 						int bytesSize = in.readInt();
 						byte[] bytes = new byte[bytesSize];
@@ -221,7 +231,7 @@ public class ServerClass {
 							writeDatabase(name);
 						}
 					}
-					else if(work_type.equals("NEXT_PHOTO")){
+					else if(work_type.equals("NEXT_PHOTO")){//Отправка клиенту следующей фотографии
 						final String name = in.readUTF();
 						int user_num = SearchUser(name);
 						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
@@ -236,7 +246,7 @@ public class ServerClass {
 						}
 						socket_out.close();
 					}
-					else if(work_type.equals("PREV_PHOTO")){
+					else if(work_type.equals("PREV_PHOTO")){//Отправка клиенту предыдущей фотографии
 						final String name = in.readUTF();
 						int user_num = SearchUser(name);
 						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
@@ -251,7 +261,7 @@ public class ServerClass {
 						}
 						socket_out.close();
 					}
-					else if(work_type.equals("DELETE_PHOTO")){
+					else if(work_type.equals("DELETE_PHOTO")){//Удаление фотографии
 						final String name = in.readUTF();
 						deleteFile(name);
 						writeDatabase(name);

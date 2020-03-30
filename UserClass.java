@@ -46,6 +46,7 @@ public class UserClass {
 		iterator.add(date);
 	}
 
+	//Функция возвращает имя следующей фотографии
 	public String next_photoDate(){
 		if(iterator.hasNext()){
 			return iterator.next();
@@ -61,6 +62,7 @@ public class UserClass {
 		}
 	}
 	
+	//Функция возвращает имя предыдущей фотографии
 	public String previsious_photoDate(){
 		if(iterator.hasPrevious()){
 			return iterator.previous();
