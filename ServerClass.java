@@ -23,6 +23,8 @@ public class ServerClass {
 	private static final int SERVER_PORT = 4512;
 	private static ArrayList<UserClass> users = new ArrayList<UserClass>(5);
 	private static String message;
+	private static boolean working = true;
+	private static AdminClass admin = new AdminClass();
 	
 	//функция записи записи в файл логинов и паролей
 	private static void writeDatabase() throws IOException{ 
@@ -162,7 +164,7 @@ public class ServerClass {
 		readDatabase();
 		final ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
 		try{
-			while(true){
+			while(working){
 				final Socket socket = serverSocket.accept();
 				try{
 					final DataInputStream in = new DataInputStream(socket.getInputStream());
@@ -270,6 +272,12 @@ public class ServerClass {
 						if(user_num>=0 && users.get(user_num).get_online()){
 							deleteFile(name);
 							writeDatabase(name);
+						}
+					}
+					else if(work_type.equals("CLOSE_SERVER")){
+						final String name = in.readUTF();
+						if(name.equals("Admin") && admin.check_admin(users.get(0).get_ip())){
+							working = false;
 						}
 					}
 				}
