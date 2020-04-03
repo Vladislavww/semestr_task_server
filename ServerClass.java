@@ -177,6 +177,7 @@ public class ServerClass {
 								message = "true";
 								users.get(i).set_ip(((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().getHostAddress());
 								users.get(i).set_port(Integer.parseInt(port));
+								users.get(i).set_online(true);
 								break;
 							}
 						}
@@ -218,14 +219,12 @@ public class ServerClass {
 					else if(work_type.equals("IMPORT_PHOTO")){//режим принятия и сохранения фотографии от клиента
 						final String name = in.readUTF();
 						int bytesSize = in.readInt();
-						byte[] bytes = new byte[bytesSize];
-						System.out.println(bytesSize+"++");
-						System.out.println(in.available()+"++");
-						for(int i=0; i<bytesSize; i++){
-							bytes[i] = in.readByte();
-							System.out.println(bytes[i]+" "+i+" "+in.available());
-						}
-						if(SearchUser(name)>=0){
+						int user_num = SearchUser(name);
+						if(user_num>=0 && users.get(user_num).get_online()){
+							byte[] bytes = new byte[bytesSize];
+							for(int i=0; i<bytesSize; i++){
+								bytes[i] = in.readByte();
+							}
 							File path = createPath(name);
 							saveFile(bytes, bytesSize, path);
 							writeDatabase(name);
@@ -234,37 +233,44 @@ public class ServerClass {
 					else if(work_type.equals("NEXT_PHOTO")){//Отправка клиенту следующей фотографии
 						final String name = in.readUTF();
 						int user_num = SearchUser(name);
-						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
-						final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
-						File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
-						int bytesSize = openFile_size(path);
-						byte[] bytes = openFile(path);
-						out.writeUTF(work_type);
-						out.writeInt(bytesSize);
-						for(int i=0; i<bytesSize; i++){
-							out.writeByte(bytes[i]);
+						if(user_num>=0 && users.get(user_num).get_online()){
+							final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
+							final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
+							File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
+							int bytesSize = openFile_size(path);
+							byte[] bytes = openFile(path);
+							out.writeUTF(work_type);
+							out.writeInt(bytesSize);
+							for(int i=0; i<bytesSize; i++){
+								out.writeByte(bytes[i]);
+							}
+							socket_out.close();
 						}
-						socket_out.close();
 					}
 					else if(work_type.equals("PREV_PHOTO")){//Отправка клиенту предыдущей фотографии
 						final String name = in.readUTF();
 						int user_num = SearchUser(name);
-						final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
-						final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
-						File path = new File("./Database/"+name+"/"+users.get(user_num).previsious_photoDate()+".png");
-						int bytesSize = openFile_size(path);
-						byte[] bytes = openFile(path);
-						out.writeUTF(work_type);
-						out.writeInt(bytesSize);
-						for(int i=0; i<bytesSize; i++){
-							out.writeByte(bytes[i]);
+						if(user_num>=0 && users.get(user_num).get_online()){
+							final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
+							final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
+							File path = new File("./Database/"+name+"/"+users.get(user_num).previsious_photoDate()+".png");
+							int bytesSize = openFile_size(path);
+							byte[] bytes = openFile(path);
+							out.writeUTF(work_type);
+							out.writeInt(bytesSize);
+							for(int i=0; i<bytesSize; i++){
+								out.writeByte(bytes[i]);
+							}
+							socket_out.close();
 						}
-						socket_out.close();
 					}
 					else if(work_type.equals("DELETE_PHOTO")){//Удаление фотографии
 						final String name = in.readUTF();
-						deleteFile(name);
-						writeDatabase(name);
+						int user_num = SearchUser(name);
+						if(user_num>=0 && users.get(user_num).get_online()){
+							deleteFile(name);
+							writeDatabase(name);
+						}
 					}
 				}
 				catch (UnknownHostException e){

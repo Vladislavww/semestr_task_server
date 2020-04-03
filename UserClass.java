@@ -1,7 +1,11 @@
 package bsu.rfe_g6k2.Yackou.server;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.ListIterator;
+
+import javax.swing.Timer;
 
 public class UserClass {
 	private String login;
@@ -10,6 +14,12 @@ public class UserClass {
 	private int port;
 	private LinkedList<String> photoDates = new LinkedList<String>();
 	private ListIterator<String> iterator = photoDates.listIterator();
+	boolean isOnline = false;
+	private Timer onlineActionTimer = new Timer(60000, new ActionListener(){
+		public void actionPerformed(ActionEvent ev){
+			set_online(false);
+		}
+	});
 	
 	public UserClass(String new_login, String new_password){
 		login = new_login;
@@ -88,6 +98,21 @@ public class UserClass {
 	
 	public void deletePhoto(){
 		iterator.remove();
+	}
+	
+	public void set_online(boolean condition){
+		if(condition == true){
+			isOnline = true;
+			onlineActionTimer.restart();
+		}
+		else{
+			isOnline = false;
+			onlineActionTimer.stop();
+		}
+	}
+	
+	public boolean get_online(){
+		return isOnline;
 	}
 
 }
