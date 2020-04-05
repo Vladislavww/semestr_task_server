@@ -20,7 +20,8 @@ public class UserClass {
 			set_online(false);
 		}
 	});
-	
+	private byte lastAction = 0; //0-не менял, 1-следующее, 2-предыдущее
+	private int index = 0;
 	public UserClass(String new_login, String new_password){
 		login = new_login;
 		password = new_password;
@@ -58,11 +59,14 @@ public class UserClass {
 
 	//Функция возвращает имя следующей фотографии
 	public String next_photoDate(){
+		lastAction = 1;
 		if(iterator.hasNext()){
+			index += 1;
 			return iterator.next();
 		}
 		else{
 			iterator = photoDates.listIterator(0);
+			index = 0;
 			if(photoDates.size()>0){
 				return iterator.next();
 			}
@@ -74,11 +78,14 @@ public class UserClass {
 	
 	//Функция возвращает имя предыдущей фотографии
 	public String previsious_photoDate(){
+		lastAction = 2;
 		if(iterator.hasPrevious()){
+			index -= 1;
 			return iterator.previous();
 		}
 		else{
 			iterator = photoDates.listIterator(photoDates.size());
+			index = photoDates.size();
 			if(photoDates.size()>0){
 				return iterator.previous();
 			}
@@ -113,6 +120,13 @@ public class UserClass {
 	
 	public boolean get_online(){
 		return isOnline;
+	}
+	
+	public boolean check_user(String password_to_check){
+		if(password.equals(password_to_check)){
+			return true;
+		}
+		return false;
 	}
 
 }

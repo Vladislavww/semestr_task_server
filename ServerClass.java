@@ -25,6 +25,7 @@ public class ServerClass {
 	private static String message;
 	private static boolean working = true;
 	private static AdminClass admin = new AdminClass();
+	private static CryptClass crypter;
 	
 	//функция записи записи в файл логинов и паролей
 	private static void writeDatabase() throws IOException{ 
@@ -138,6 +139,7 @@ public class ServerClass {
 	//Удаление фотографии из БД
 	private static void deleteFile(String name){
 		int user_num = SearchUser(name);
+		users.get(user_num).previsious_photoDate();
 		File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
 		users.get(user_num).deletePhoto();
 		path.delete();
@@ -161,6 +163,7 @@ public class ServerClass {
 		return name.format(date);
 	}
 	public static void main(String[] args) throws IOException {
+		crypter = new CryptClass();
 		readDatabase();
 		final ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
 		try{
@@ -171,7 +174,7 @@ public class ServerClass {
 					final String work_type = in.readUTF(); //режим работы сервера на данной итерации
 					if(work_type.equals("CHECK_IN")){//режим проверки логина и пароля
 						final String login = in.readUTF();
-						final String password = in.readUTF();
+						final String password = crypter.encryptFile(login, in.readUTF());
 						final String port = in.readUTF();
 						message = "false";
 						for(int i=0; i<users.size(); i++){
@@ -193,7 +196,7 @@ public class ServerClass {
 					}
 					else if(work_type.equals("NEW_USER")){ //режим регистрации новой уч.записи
 						final String login = in.readUTF();
-						final String password = in.readUTF();
+						final String password = crypter.encryptFile(login, in.readUTF());
 						final String port = in.readUTF();
 						final String address = ((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().getHostAddress();
 						boolean repeated = false;
@@ -220,9 +223,10 @@ public class ServerClass {
 					}
 					else if(work_type.equals("IMPORT_PHOTO")){//режим принятия и сохранения фотографии от клиента
 						final String name = in.readUTF();
-						int bytesSize = in.readInt();
+						final String password = crypter.encryptFile(name, in.readUTF());
 						int user_num = SearchUser(name);
-						if(user_num>=0 && users.get(user_num).get_online()){
+						if(user_num>=0 && users.get(user_num).check_user(password)){
+							int bytesSize = in.readInt();
 							byte[] bytes = new byte[bytesSize];
 							for(int i=0; i<bytesSize; i++){
 								bytes[i] = in.readByte();
@@ -234,8 +238,9 @@ public class ServerClass {
 					}
 					else if(work_type.equals("NEXT_PHOTO")){//Отправка клиенту следующей фотографии
 						final String name = in.readUTF();
+						final String password = crypter.encryptFile(name, in.readUTF());
 						int user_num = SearchUser(name);
-						if(user_num>=0 && users.get(user_num).get_online()){
+						if(user_num>=0 && users.get(user_num).check_user(password)){
 							final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
 							final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
 							File path = new File("./Database/"+name+"/"+users.get(user_num).next_photoDate()+".png");
@@ -251,8 +256,9 @@ public class ServerClass {
 					}
 					else if(work_type.equals("PREV_PHOTO")){//Отправка клиенту предыдущей фотографии
 						final String name = in.readUTF();
+						final String password = crypter.encryptFile(name, in.readUTF());
 						int user_num = SearchUser(name);
-						if(user_num>=0 && users.get(user_num).get_online()){
+						if(user_num>=0 && users.get(user_num).check_user(password)){
 							final Socket socket_out = new Socket(users.get(user_num).get_ip(), users.get(user_num).get_port());
 							final DataOutputStream out = new DataOutputStream(socket_out.getOutputStream());
 							File path = new File("./Database/"+name+"/"+users.get(user_num).previsious_photoDate()+".png");
@@ -268,15 +274,17 @@ public class ServerClass {
 					}
 					else if(work_type.equals("DELETE_PHOTO")){//Удаление фотографии
 						final String name = in.readUTF();
+						final String password = crypter.encryptFile(name, in.readUTF());
 						int user_num = SearchUser(name);
-						if(user_num>=0 && users.get(user_num).get_online()){
+						if(user_num>=0 && users.get(user_num).check_user(password)){
 							deleteFile(name);
 							writeDatabase(name);
 						}
 					}
 					else if(work_type.equals("CLOSE_SERVER")){
 						final String name = in.readUTF();
-						if(name.equals("Admin") && admin.check_admin(users.get(0).get_ip())){
+						final String password = crypter.encryptFile(name, in.readUTF());
+						if(name.equals("Admin") && admin.check_admin(users.get(0).get_ip()) && users.get(0).check_user(password)){
 							working = false;
 						}
 					}
