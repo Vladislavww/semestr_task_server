@@ -1,6 +1,4 @@
 package bsu.rfe_g6k2.Yackou.server;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
 public class AdminClass{
 	//private String ip = "192.168.100.8";
