@@ -1,23 +1,30 @@
 package bsu.rfe_g6k2.Yackou.server;
 
+
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+/**
+ * This class contains information about users
+ * 
+ * @version No recording 23.05.2020
+ * @author Vlad Yatskou
+ */
 public class UserClass {
 	private String login;
 	private String password;
 	private String ip;
 	private int port;
+	
+	/** Choise of LinkedList: data from this container will often be edited (adding and deleleting) */
 	private LinkedList<String> photoDates = new LinkedList<String>();
 	private ListIterator<String> iterator = photoDates.listIterator();
-	private byte lastAction; //0-не менял, 1-следующее, 2-предыдущее
-	private int index = 0;
+	
 	public UserClass(String new_login, String new_password){
 		login = new_login;
 		password = new_password;
 		ip = "";
 		port = 0;
-		lastAction = 0;
 	}
 	
 	public void set_ip(String new_ip){
@@ -44,43 +51,43 @@ public class UserClass {
 		return port;
 	}
 	
+	/** Add name-date of photo */
 	public void add_photoDate(String date){
 		iterator.add(date);
 	}
 
-	//Функция возвращает имя следующей фотографии
+	/** Return name of next photo */
 	public String next_photoDate(){
-		lastAction = 1;
-		if(iterator.hasNext()){
-			index += 1;
+		if (iterator.hasNext()) {
 			return iterator.next();
-		}
-		else{
+		} else {
 			iterator = photoDates.listIterator(0);
-			index = 0;
-			if(photoDates.size()>0){
+			
+			if (photoDates.size()>0) {
 				return iterator.next();
-			}
-			else{
+			} else {
+				
+				/** Return a name of non-existing photo. There will no errors of not finding this photo */
 				return "null";
 			}
 		}
 	}
 	
-	//Функция возвращает имя предыдущей фотографии
+	/** Return name of previsious photo */
 	public String previsious_photoDate(){
-		lastAction = 2;
-		if(iterator.hasPrevious()){
-			index -= 1;
+		//lastAction = 2;
+		if (iterator.hasPrevious()) {
+			//index -= 1;
 			return iterator.previous();
-		}
-		else{
+		} else {
 			iterator = photoDates.listIterator(photoDates.size());
-			index = photoDates.size();
-			if(photoDates.size()>0){
+			//index = photoDates.size();
+			
+			if (photoDates.size()>0) {
 				return iterator.previous();
-			}
-			else{
+			} else {
+				
+				/** Return a name of non-existing photo. There will no errors of not finding this photo */
 				return "null";
 			}
 		}
