@@ -97,9 +97,9 @@ public class FileWriterClass {
 			}
 			in.close(); 
 		} catch (FileNotFoundException ex) {
-			//TODO write exception
+			ex.printStackTrace();
 		} catch (IOException ex) { 
-			//TODO write exception
+			ex.printStackTrace();
 		} finally{
 			return bytesFigure;
 		}
@@ -117,9 +117,9 @@ public class FileWriterClass {
 			in.close(); 
 		} 
 		catch (FileNotFoundException ex){
-			//TODO write exception
+			ex.printStackTrace();
 		} catch (IOException ex){
-			//TODO write exception
+			ex.printStackTrace();
 		} finally{
 			return bytesFigureSize;
 		}
@@ -135,7 +135,7 @@ public class FileWriterClass {
 			}
 			out.close();
 		} catch (Exception e) {
-			//TODO write exception
+			e.printStackTrace();
 		}
 	}
 	
