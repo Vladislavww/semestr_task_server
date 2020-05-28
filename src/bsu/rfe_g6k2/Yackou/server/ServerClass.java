@@ -56,13 +56,13 @@ public class ServerClass extends JFrame implements Runnable{
 		try {
 			writer.readDatabase();
 		} catch (IOException e1) {
-			//TODO write exception
+			e1.printStackTrace();
 		}
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(SERVER_PORT);
 		} catch (IOException e1) {
-			//TODO write exception
+			e1.printStackTrace();
 		}
 		try {
 			while (working) {
@@ -225,27 +225,23 @@ public class ServerClass extends JFrame implements Runnable{
 					}
 				}
 				catch (UnknownHostException e) {
-					//TODO write exception
 					e.printStackTrace();
-					System.out.println("Была ошибка. Работа продолжена.");
 				} 
 				catch (IOException e) {
-					//TODO write exception
 					e.printStackTrace();
-					System.out.println("Была ошибка. Работа продолжена.");
 				}
 				finally {
 					socket.close();
 				}
 			}
 		} catch (IOException e) {
-			//TODO write exception
+			e.printStackTrace();
 		}
 		finally{
 			try {
 				serverSocket.close();
 			} catch (IOException e) {
-				//TODO write exception
+				e.printStackTrace();
 			}
 		}
 		
